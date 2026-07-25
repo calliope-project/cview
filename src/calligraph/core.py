@@ -137,11 +137,7 @@ class ModelContainer:
 
     @property
     def name(self):
-        name = str(self.model.config.init.name)
-        if name == "None":
-            return "Unnamed model"
-        else:
-            return name
+        return self.model.name or "Unnamed model"
 
 
 def filter_selectors(
@@ -175,10 +171,7 @@ def get_model_summary_df(model_container):
     model = model_container.model
     results = model_container.combined_data
     data = [
-        (
-            "Model name",
-            model.config.init.name,
-        ),  # FIXME why is there also a property/method
+        ("Model name", model.name),
         ("Scenario name", model.runtime.scenario),
         ("Applied overrides", model.runtime.applied_overrides),
         ("Calliope version", model.runtime.calliope_version_initialised),
