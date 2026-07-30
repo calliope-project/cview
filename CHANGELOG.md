@@ -1,3 +1,9 @@
+## Unreleased
+
+* Migrate to `pixi` and `uv`
+* Switched from `black` to `ruff format`
+* Minimal CI workflow
+
 ## 0.1.1.dev7
 
 * Compatibility with calliope 0.7.0.dev7

@@ -1,25 +1,45 @@
-name: Release
+name: Publish to PyPI
 
 on:
   release:
     types: [released]
 
+# Build and publish are separate jobs so that `id-token: write` — which is what
+# trusted publishing signs with — is held by as few steps as possible.
 jobs:
-  pip-publish:
+  pypi-build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      PACKAGENAME: "pip-build-${{ inputs.package_name }}-${{ github.ref_name }}"
     steps:
+      - uses: actions/checkout@v7
 
-    - name: Download built package from another workflow
-      uses: dawidd6/action-download-artifact@v6
-      with:
-        name: ${{ env.PACKAGENAME }}
-        workflow: pr-ci.yml
-        path: dist/
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
 
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Build
+        run: uv build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dists
+          path: dist/
+
+  pypi-publish:
+    needs: [pypi-build]
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Download build artifacts from the build job
+        uses: actions/download-artifact@v8
+        with:
+          name: dists
+          path: dist/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+
+      - name: Publish
+        run: uv publish

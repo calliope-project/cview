@@ -13,7 +13,6 @@ pn.extension(design="bootstrap")
 
 
 class UIView:
-
     COORD_ORDERING = ["carriers", "nodes", "techs", "costs"]
     TECHS_COORD_ORDERING = ["supply", "conversion", "storage", "demand", "transmission"]
     HEADER_BACKGROUND_COLOR = "#55b3f9"

@@ -13,7 +13,9 @@ def fig_static(model_container, variable, **selectors):
         x=(
             "nodes"
             if "nodes" in data.columns
-            else "techs" if "techs" in data.columns else "costs"
+            else "techs"
+            if "techs" in data.columns
+            else "costs"
         ),
         y=variable,
         color="techs" if "techs" in data.columns else None,
@@ -49,7 +51,9 @@ def fig_object_timeseries_bar(model_container, variable, data):
         color=(
             "techs"
             if "techs" in data.columns
-            else "nodes" if "nodes" in data.columns else None
+            else "nodes"
+            if "nodes" in data.columns
+            else None
         ),
         color_discrete_map=model_container.colors_techs.param.values(),
     )
@@ -63,7 +67,9 @@ def fig_object_timeseries_line(model_container, variable, data):
         color=(
             "techs"
             if "techs" in data.columns
-            else "nodes" if "nodes" in data.columns else None
+            else "nodes"
+            if "nodes" in data.columns
+            else None
         ),
         color_discrete_map=model_container.colors_techs.param.values(),
         render_mode="webgl",
@@ -98,7 +104,9 @@ def fig_object_timeseries_duration(model_container, variable, data):
         color=(
             "techs"
             if "techs" in data.columns
-            else "nodes" if "nodes" in data.columns else None
+            else "nodes"
+            if "nodes" in data.columns
+            else None
         ),
         color_discrete_map=model_container.colors_techs.param.values(),
         render_mode="webgl",
