@@ -41,5 +41,9 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v9
 
+      # `always` rather than uv's default `automatic`: automatic attempts the OIDC
+      # exchange but falls back to other credential sources if it fails, so a
+      # misconfigured publisher would surface as "no credentials" rather than as
+      # the trusted-publishing error that actually explains it.
       - name: Publish
-        run: uv publish
+        run: uv publish --trusted-publishing always

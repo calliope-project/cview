@@ -41,8 +41,13 @@ jobs:
       - name: Smoke test (source distribution)
         run: uv run --isolated --no-project --with dist/*.tar.gz calligraph --help
 
+      # `--check-url` makes uv skip files the index already has instead of failing.
+      # Without it, pushing any fix to a release PR re-runs this step against a
+      # version TestPyPI has already accepted, and TestPyPI refuses a re-upload.
       - name: Publish on success
-        run: uv publish --index testpypi --trusted-publishing always
+        run: >-
+          uv publish --index testpypi --trusted-publishing always
+          --check-url https://test.pypi.org/simple/
 
       # `--prerelease allow` because both calligraph and its calliope dependency
       # are still pre-releases, which uv refuses to resolve for a bare requirement.
