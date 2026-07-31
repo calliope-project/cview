@@ -1,0 +1,38 @@
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: debug-statements
+      - id: check-merge-conflict
+      - id: check-illegal-windows-names
+      # One argument per list item: pre-commit passes `args` through verbatim, so
+      # "--enforce-all --maxkb=1000" as a single string is parsed as a filename and
+      # the hook silently falls back to its 500 kB default.
+      - id: check-added-large-files
+        args: [--enforce-all, --maxkb=1000]
+        exclude: "pixi.lock"
+      - id: trailing-whitespace
+        exclude: ".*.(svg|png|csv)$"
+      - id: end-of-file-fixer
+        exclude: ".*.(svg|png|csv)$"
+
+ci:  # https://pre-commit.ci/
+  autofix_prs: false
+  autoupdate_schedule: quarterly

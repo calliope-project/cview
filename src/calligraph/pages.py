@@ -10,7 +10,7 @@ def page_home(ui_view):
     return pn.Column(
         pn.Row(
             pn.Column(
-                pn.pane.DataFrame(core.get_model_summary_df(model_container)),
+                pn.pane.DataFrame(core.get_model_summary_df(model_container))
                 # "## Build configuration",
                 # pn.pane.DataFrame(core.get_build_config_df(model_container)),
                 # "## Solve configuration",

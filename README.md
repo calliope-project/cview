@@ -36,3 +36,30 @@ Then:
 ```shell
 $ calligraph urban_scale.nc
 ```
+
+## Development
+
+Development environments are managed with [pixi](https://pixi.sh/), which installs
+Python, the binary dependencies and the development tooling from a committed lockfile:
+
+```shell
+git clone git@github.com:calliope-project/calligraph.git
+cd calligraph
+pixi install
+```
+
+Then:
+
+```shell
+pixi run check         # lint, formatting and tests
+pixi run test          # tests only
+pixi run format        # apply formatting
+pixi run docs-serve    # documentation, with live reload
+pixi run build         # build the wheel and source distribution
+```
+
+`pixi run pre-commit-install` sets up the git hooks, which run the same lint and
+formatting checks on commit.
+
+The default environment is Python 3.12. `pixi run -e py310 …` and `-e py311` are the
+other supported versions, and CI runs all three.

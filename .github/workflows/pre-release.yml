@@ -1,62 +1,57 @@
-name: Pre-release
+name: Publish to PyPI (test)
+
+permissions:
+  contents: read
+  id-token: write
 
 on:
   pull_request:
     branches:
       - "main"
 
-defaults:
-  run:
-    shell: bash -l {0}
-
 concurrency:
-  # Use github.run_id on main branch
-  # Use github.event.pull_request.number on pull requests, so it's unique per pull request
-  # Use github.ref on other branches, so it's unique per branch
-  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  pre-release-version:
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.pull_request.title, 'Release v')
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-    steps:
-      - id: get-version
-        run: |
-          fullname="${{github.event.pull_request.title}}"
-          echo "version=${fullname#"Release "}" >> $GITHUB_OUTPUT
-
   pip-test:
+    environment:
+      name: pre-release
     runs-on: ubuntu-latest
     if: startsWith(github.event.pull_request.title, 'Release v')
     steps:
-      - uses: actions/checkout@v4
-      - uses: mamba-org/setup-micromamba@v1
-        with:
-          micromamba-version: '1.5.10-0'
-          environment-name: pipbuild
-          create-args: >-
-            python=3.11
-            pip
-            python-build
-          post-cleanup: all
-          cache-environment: true
-      - name: Build package
-        run: python -m build
-      - name: Test package install
-        run: |
-          pip install dist/calligraph-*.tar.gz
-          calligraph --help
+      - uses: actions/checkout@v7
 
-  pre-release:
-    needs: [pre-release-version, pip-test]
-    if: needs.pip-test.result == 'success' && startsWith(github.event.pull_request.title, 'Release v')
-    uses: arup-group/actions-city-modelling-lab/.github/workflows/pip-build.yml@main
-    secrets:
-      TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
-    with:
-      package_name: calligraph
-      version: ${{needs.pre-release-version.outputs.version}}
-      pip_args: ''
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+
+      # Not the latest Python: calliope 0.7.0.dev7 pins `xarray < 2024.4`, and the
+      # rest of the stack is only pinned against that on 3.12 and below.
+      - name: Install Python
+        run: uv python install 3.12
+
+      - name: Build
+        run: uv build
+
+      # Both artefacts, because a wheel can be fine while the sdist is missing a
+      # file the build needs — and the sdist is what conda-forge would consume.
+      - name: Smoke test (wheel)
+        run: uv run --isolated --no-project --with dist/*.whl calligraph --help
+
+      - name: Smoke test (source distribution)
+        run: uv run --isolated --no-project --with dist/*.tar.gz calligraph --help
+
+      # `--check-url` makes uv skip files the index already has instead of failing.
+      # Without it, pushing any fix to a release PR re-runs this step against a
+      # version TestPyPI has already accepted, and TestPyPI refuses a re-upload.
+      - name: Publish on success
+        run: >-
+          uv publish --index testpypi --trusted-publishing always
+          --check-url https://test.pypi.org/simple/
+
+      # `--prerelease allow` because both calligraph and its calliope dependency
+      # are still pre-releases, which uv refuses to resolve for a bare requirement.
+      - name: Test successful publication
+        run: >-
+          uv run --with calligraph --refresh-package calligraph --index testpypi
+          --no-project --prerelease allow -- calligraph --help
